@@ -20,8 +20,10 @@ const postSchema = new Schema({
     area: { type: String, required: true },
     state: { type: String, required: true },
 
-    agrees: { type: Number, default: 0 },
-    disagrees: { type: Number, default: 0 },
+    agrees:      { type: Number, default: 0 },
+    disagrees:   { type: Number, default: 0 },
+    agreedBy:    [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }],
+    disagreedBy: [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }],
     views: { type: Number, default: 0 },
     comments: { type: [commentSchema], default: [] },
 
