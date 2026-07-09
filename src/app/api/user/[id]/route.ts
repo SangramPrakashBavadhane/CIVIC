@@ -4,8 +4,9 @@ import { dbConnect } from '@/lib/mongoose';
 import User from '@/models/User';
 import Post from '@/models/Post';
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
+        const { id } = await params;
         const session = await auth();
         if (!session?.user?.email) {
             return NextResponse.json({ message: 'Unauthenticated' }, { status: 401 });
@@ -26,14 +27,14 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         }
 
         // Can only delete your own account
-        if (user._id.toString() !== params.id) {
+        if (user._id.toString() !== id) {
             return NextResponse.json(
                 { message: 'You can only delete your own account' },
                 { status: 403 }
             );
         }
 
-        await User.findByIdAndDelete(params.id);
+        await User.findByIdAndDelete(id);
 
         return NextResponse.json(
             { message: 'Account deleted successfully' },
