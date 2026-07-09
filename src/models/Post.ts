@@ -11,6 +11,10 @@ const postSchema = new Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
 
+    // Media Fields
+    mediaUrl: { type: String, default: null },
+    mediaType: { type: String, enum: ['image', 'video', 'none'], default: 'none' },
+
     postedIn: {
         type: String,
         enum: ['area', 'state'],
@@ -20,12 +24,17 @@ const postSchema = new Schema({
     area: { type: String, required: true },
     state: { type: String, required: true },
 
-    agrees:      { type: Number, default: 0 },
-    disagrees:   { type: Number, default: 0 },
-    agreedBy:    [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }],
+    agrees: { type: Number, default: 0 },
+    disagrees: { type: Number, default: 0 },
+    agreedBy: [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }],
     disagreedBy: [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }],
     views: { type: Number, default: 0 },
-    comments: { type: [commentSchema], default: [] },
+    comments: [{
+        text: { type: String, required: true },
+        authorName: { type: String, required: true },
+        authorId: { type: Schema.Types.ObjectId, ref: 'User' },
+        createdAt: { type: Date, default: Date.now }
+    }],
 
     // Status — only officers can change this
     status: {

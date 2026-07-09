@@ -68,7 +68,7 @@ export async function GET() {
     ])
     const u = (email: string) => users.find(u => u.email === email)!._id;
 
-    await Post.insertMany([
+    const posts = await Post.insertMany([
         // Kothrud area posts
         {
             authorId: u('rahul@civic.com'),
@@ -136,12 +136,21 @@ export async function GET() {
             postedIn: 'state', area: 'Bavdhan', state: 'Maharashtra',
             agrees: 350, disagrees: 10, views: 1200, status: 'TakenIntoConsideration',
         },
-    ])
+    ]);
+
+    // Update users' post history arrays with the seeded posts
+    for (const post of posts) {
+        if (post.postedIn === 'area') {
+            await User.updateOne({ _id: post.authorId }, { $push: { areaPostHistory: post._id } });
+        } else {
+            await User.updateOne({ _id: post.authorId }, { $push: { statePostHistory: post._id } });
+        }
+    }
 
     return NextResponse.json({
         message: '✅ Database seeded successfully!',
         users: users.length,
-        posts: 9,
+        posts: posts.length,
     });
 
 }

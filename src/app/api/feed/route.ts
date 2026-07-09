@@ -25,8 +25,21 @@ export async function GET(req: NextRequest) {
                 $match: {
                     postedIn: tab,
                     ...(tab === 'area' ? { area: user.location.area } : { state: user.location.state }),
-                    _id: { $nin: user.watchHistory || [] }
                 },
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'authorId',
+                    foreignField: '_id',
+                    as: 'author'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$author',
+                    preserveNullAndEmptyArrays: true
+                }
             },
             {
                 $addFields: {
@@ -41,13 +54,7 @@ export async function GET(req: NextRequest) {
             { $limit: 10 },
         ]);
 
-        if (posts.length > 0) {
-            const postIds = posts.map((p) => p._id);
-            await User.updateOne(
-                { _id: user._id },
-                { $push: { watchHistory: { $each: postIds } } }
-            );
-        }
+        // Watch history updating removed for MVP
 
         return NextResponse.json({ posts }, { status: 200 });
 

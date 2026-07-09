@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { dbConnect } from '@/lib/mongoose';
 import User from '@/models/User';
+import Post from '@/models/Post';
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
     try {
@@ -47,3 +48,31 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     }
 }
 
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    try {
+        await dbConnect();
+
+
+        const { id } = await params;
+
+        const user = await User.findById(id).select('-password').lean();
+
+        if (!user) {
+            return NextResponse.json({ message: 'User not found' }, { status: 404 });
+        }
+
+        // Fetch all posts authored by this user
+        const userPosts = await Post.find({ authorId: id }).sort({ createdAt: -1 }).lean();
+
+
+        const userProfile = {
+            ...user,
+            posts: userPosts
+        };
+
+        return NextResponse.json({ user: userProfile }, { status: 200 });
+
+    } catch (error) {
+        return NextResponse.json({ message: 'Server error', error: String(error) }, { status: 500 });
+    }
+}

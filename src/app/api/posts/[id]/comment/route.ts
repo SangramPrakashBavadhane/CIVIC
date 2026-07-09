@@ -4,13 +4,17 @@ import { dbConnect } from '@/lib/mongoose';
 import Post from '@/models/Post';
 import User from '@/models/User';
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const session = await auth();
         if (!session?.user?.email) {
             return NextResponse.json({ message: 'Unauthenticated' }, { status: 401 });
         }
         await dbConnect();
+
+        // Await the params object (Required in Next.js 15+)
+        const { id } = await params;
 
         const user = await User.findOne({ email: session.user.email });
         if (!user) {
@@ -26,33 +30,27 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             );
         }
 
-        const post = await Post.findById(params.id);
+        // Create the comment matching the new Schema (authorName is required!)
+        const newComment = {
+            text: text.trim(),
+            authorName: user.name,
+            authorId: user._id,
+            createdAt: new Date()
+        };
+
+        const post = await Post.findByIdAndUpdate(
+            id,
+            { $push: { comments: newComment } },
+            { new: true }
+        );
+
         if (!post) {
             return NextResponse.json({ message: 'Post not found' }, { status: 404 });
         }
 
-        post.comments.push({
-            userId: user._id,
-            text: text.trim(),
-            createdAt: new Date(),
-        });
+        return NextResponse.json({ message: 'Comment added', comment: newComment }, { status: 201 });
 
-        await post.save();
-
-        return NextResponse.json(
-            { message: 'Comment added!', comments: post.comments },
-            { status: 201 }
-        );
-
-
-
-
-
-    }
-    catch (error) {
-        return NextResponse.json(
-            { message: 'Server error', error: String(error) },
-            { status: 500 }
-        );
+    } catch (error) {
+        return NextResponse.json({ message: 'Server error', error: String(error) }, { status: 500 });
     }
 }

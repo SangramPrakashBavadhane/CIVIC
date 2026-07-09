@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { dbConnect } from '@/lib/mongoose';
-import Post from '@/models/Post';
 import User from '@/models/User';
+import Post from '@/models/Post';
 
-
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const session = await auth();
         if (!session?.user?.email) {
@@ -14,73 +13,35 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
         await dbConnect();
 
-        const user = await User.findOne({ email: session.user.email });
-        if (!user) {
-            return NextResponse.json({ message: 'User not found' }, { status: 404 });
-        }
+        // Await the params object (Required in Next.js 15+)
+        const { id } = await params;
 
-        if (user.role === 'user') {
-            return NextResponse.json(
-                { message: 'Only officers can change post status' },
-                { status: 403 }
-            );
-        }
+        const { status } = await req.json();
 
-        const post = await Post.findById(params.id);
-        if (!post) {
+        // Fetch post first to check its level
+        const postToUpdate = await Post.findById(id);
+        if (!postToUpdate) {
             return NextResponse.json({ message: 'Post not found' }, { status: 404 });
         }
 
-        // 2️⃣ offL1 can only update posts from their own area
-        if (user.role === 'offL1' && post.area !== user.location.area) {
-            return NextResponse.json(
-                { message: 'You can only update posts from your area' },
-                { status: 403 }
-            );
-        }
-        // 3️⃣ offL2 can only update posts from their own state
-        if (user.role === 'offL2' && post.state !== user.location.state) {
-            return NextResponse.json(
-                { message: 'You can only update posts from your state' },
-                { status: 403 }
-            );
+        // Check if the user is an authorized officer for this specific post
+        const user = await User.findOne({ email: session.user.email });
+        const userRole = user?.role?.toLowerCase();
+        
+        const canEditArea = userRole === 'offl1' && postToUpdate.postedIn === 'area';
+        const canEditState = userRole === 'offl2' && postToUpdate.postedIn === 'state';
+
+        if (!user || (!canEditArea && !canEditState)) {
+            return NextResponse.json({ message: 'Forbidden. You are not authorized to change the status of this post.' }, { status: 403 });
         }
 
-        //as teh itehr 4 options will be offl1 and same area , offL2 and same state will have same thing
-        const { status } = await req.json();
+        // Update the post status
+        postToUpdate.status = status;
+        await postToUpdate.save();
 
-        const validStatuses = ['NotSeen', 'TakenIntoConsideration', 'Declined', 'WorkStarted'];
-        if (!validStatuses.includes(status)) {
-            return NextResponse.json({ message: 'Invalid status value' }, { status: 400 });
-        }
-
-        post.status = status;
-        await post.save();
-
-        await User.updateOne(
-            { _id: user._id },
-            {
-                $push: {
-                    statusActionHistory: {
-                        postId: post._id,
-                        status,
-                        changedAt: new Date(),
-                    },
-                },
-            }
-        );
-
-        return NextResponse.json(
-            { message: 'Status updated successfully' },
-            { status: 200 }
-        );
-
+        return NextResponse.json({ message: 'Status updated successfully', post: postToUpdate }, { status: 200 });
 
     } catch (error) {
-        return NextResponse.json(
-            { message: 'Server error', error: String(error) },
-            { status: 500 }
-        );
-
+        return NextResponse.json({ message: 'Server error', error: String(error) }, { status: 500 });
     }
 }
