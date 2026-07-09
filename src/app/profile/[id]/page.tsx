@@ -11,7 +11,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { data: session } = useSession();
-  const isOwnProfile = session?.user?.id === userId;
+  const isOwnProfile = (session?.user as any)?.id === userId;
 
   useEffect(() => {
     const fetchProfile = async () => {

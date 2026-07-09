@@ -29,7 +29,7 @@ export default function FeedPage() {
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
     const { data: session } = useSession();
-    const userRole = session?.user?.role?.toLowerCase();
+    const userRole = (session?.user as any)?.role?.toLowerCase();
 
     useEffect(() => {
         const fetchPosts = async () => {

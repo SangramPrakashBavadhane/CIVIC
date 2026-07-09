@@ -117,7 +117,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         </div>
     );
 
-    const userRole = session?.user?.role?.toLowerCase();
+    const userRole = (session?.user as any)?.role?.toLowerCase();
     const isOfficer = (userRole === 'offl1' && post.postedIn === 'area') || (userRole === 'offl2' && post.postedIn === 'state');
 
     return (
@@ -191,7 +191,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                 )}
 
                 {/* Author Controls */}
-                {session?.user?.id === post.author?._id && (
+                {(session?.user as any)?.id === post.author?._id && (
                     <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl flex justify-between items-center shadow-xl">
                         <span className="text-sm text-zinc-400 font-medium">You reported this issue</span>
                         <button 
