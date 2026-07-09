@@ -32,7 +32,7 @@ export default function Navbar() {
 
                 {/* Profile */}
                 <Link
-                    href={(session?.user as any)?.id ? `/profile/${(session.user as any).id}` : '/login'}
+                    href={(session?.user as any)?.id ? `/profile/${(session?.user as any).id}` : '/login'}
                     className="flex flex-col items-center gap-1 opacity-70 hover:opacity-100 transition-opacity"
                 >
                     <img src="/SVGrepo/user-round-svgrepo-com.svg" alt="Profile" className={`w-7 h-7 invert ${pathname.includes('/profile') ? 'drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]' : ''}`} />
