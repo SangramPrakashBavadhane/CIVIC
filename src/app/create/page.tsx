@@ -30,8 +30,6 @@ export default function CreatePostPage() {
 
       const res = await fetch('/api/posts', {
         method: 'POST',
-        // Note: Do not set Content-Type header when sending FormData.
-        // The browser sets it automatically with the correct boundary.
         body: data,
       });
 

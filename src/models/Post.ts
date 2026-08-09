@@ -10,8 +10,6 @@ const postSchema = new Schema({
     authorId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     title: { type: String, required: true },
     description: { type: String, required: true },
-
-    // Media Fields
     mediaUrl: { type: String, default: null },
     mediaType: { type: String, enum: ['image', 'video', 'none'], default: 'none' },
 
@@ -36,7 +34,6 @@ const postSchema = new Schema({
         createdAt: { type: Date, default: Date.now }
     }],
 
-    // Status — only officers can change this
     status: {
         type: String,
         enum: ['NotSeen', 'TakenIntoConsideration', 'Declined', 'WorkStarted'],

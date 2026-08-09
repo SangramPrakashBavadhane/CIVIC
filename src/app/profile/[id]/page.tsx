@@ -44,7 +44,6 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
   return (
     <div className="min-h-screen bg-black text-white pb-20">
-      {/* USER INFO HEADER */}
       <div className="max-w-2xl mx-auto pt-12 px-4 sm:px-6 border-b border-zinc-800 pb-8 relative">
         {isOwnProfile && (
           <button 
@@ -55,7 +54,6 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           </button>
         )}
         <div className="flex items-center space-x-6">
-          {/* Default Avatar */}
           <div className="w-24 h-24 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-4xl font-bold">
             {profile.name.charAt(0).toUpperCase()}
           </div>
@@ -76,8 +74,6 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
       </div>
-
-      {/* USER'S POSTS GRID */}
       <div className="max-w-2xl mx-auto mt-8 px-4 sm:px-6">
         <h2 className="text-xl font-bold mb-6">Issues Reported</h2>
 
@@ -85,7 +81,6 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
             {profile.posts.map((post: any) => (
               <Link key={post._id} href={`/post/${post._id}`} className="aspect-square relative group block overflow-hidden bg-zinc-900">
-                {/* Thumbnail */}
                 {post.mediaType === 'video' && post.mediaUrl ? (
                   <video src={post.mediaUrl} className="w-full h-full object-cover" />
                 ) : post.mediaType === 'image' && post.mediaUrl ? (
@@ -96,8 +91,6 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                     <p className="text-xs text-zinc-400 line-clamp-3">{post.title}</p>
                   </div>
                 )}
-
-                {/* Hover Info */}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">
                   <span className="font-bold text-sm mb-1">{post.agrees} 🔥</span>
                   <span className="text-xs">{post.status}</span>

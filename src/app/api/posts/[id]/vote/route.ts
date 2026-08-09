@@ -14,25 +14,28 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const { id } = await params;
         const { type } = await req.json();
         const user = await User.findOne({ email: session.user.email });
-        if (!user) return NextResponse.json({ message: 'User not found' }, { status: 404 });
+        if (!user) {
+            console.log('Vote error: User not found for email', session.user.email);
+            return NextResponse.json({ message: 'User not found' }, { status: 404 });
+        }
+        
+        console.log('Vote info: Checking post with ID', id);
         const post = await Post.findById(id);
-        if (!post) return NextResponse.json({ message: 'Post not found' }, { status: 404 });
+        if (!post) {
+            console.log('Vote error: Post not found in DB for id', id);
+            return NextResponse.json({ message: 'Post not found' }, { status: 404 });
+        }
         const userId = user._id;
-        // Remove the user from both arrays first (to reset their vote)
-        let agreedBy = post.agreedBy.filter((uId: any) => uId.toString() !== userId.toString());
-        let disagreedBy = post.disagreedBy.filter((uId: any) => uId.toString() !== userId.toString());
-        // Did they already have this exact vote?
-        const hasAlreadyAgreed = post.agreedBy.some((uId: any) => uId.toString() === userId.toString());
-        const hasAlreadyDisagreed = post.disagreedBy.some((uId: any) => uId.toString() === userId.toString());
-        // If they click 'agree', and they HAVEN'T already agreed, add them.
+        let agreedBy = (post.agreedBy || []).filter((uId: any) => uId.toString() !== userId.toString());
+        let disagreedBy = (post.disagreedBy || []).filter((uId: any) => uId.toString() !== userId.toString());
+        const hasAlreadyAgreed = (post.agreedBy || []).some((uId: any) => uId.toString() === userId.toString());
+        const hasAlreadyDisagreed = (post.disagreedBy || []).some((uId: any) => uId.toString() === userId.toString());
         if (type === 'agree' && !hasAlreadyAgreed) {
             agreedBy.push(userId);
         }
-        // If they click 'disagree', and they HAVEN'T already disagreed, add them.
         else if (type === 'disagree' && !hasAlreadyDisagreed) {
             disagreedBy.push(userId);
         }
-        // Update the counts and save
         post.agreedBy = agreedBy;
         post.disagreedBy = disagreedBy;
         post.agrees = agreedBy.length;

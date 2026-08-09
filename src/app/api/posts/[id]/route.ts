@@ -4,16 +4,13 @@ import { dbConnect } from '@/lib/mongoose';
 import Post from '@/models/Post';
 import User from '@/models/User';
 import mongoose from 'mongoose';
-// GET /api/posts/[id] — fetch a s
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         await dbConnect();
 
-        // Await the params object (Required in Next.js 15+)
         const { id } = await params;
 
-        // Fetch post and lookup author info
         const mongoose = require('mongoose');
         const posts = await Post.aggregate([
             { $match: { _id: new mongoose.Types.ObjectId(id) } },

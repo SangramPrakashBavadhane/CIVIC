@@ -13,7 +13,6 @@ export async function GET() {
     const password = await bcrypt.hash('password123', 10);
 
     const users = await User.insertMany([
-        // State Officer (offL2) — covers all of Maharashtra
         {
             name: 'State Officer Maharashtra',
             email: 'state.officer@civic.com',
@@ -21,7 +20,6 @@ export async function GET() {
             role: 'offL2',
             location: { area: 'Kothrud', state: 'Maharashtra' },
         },
-        // Area Officers (offL1) — one per area
         {
             name: 'Officer Kothrud',
             email: 'officer.kothrud@civic.com',
@@ -43,7 +41,6 @@ export async function GET() {
             role: 'offL1',
             location: { area: 'Bhugaon', state: 'Maharashtra' },
         },
-        // Regular Citizens
         {
             name: 'Rahul Kothrud',
             email: 'rahul@civic.com',
@@ -69,7 +66,6 @@ export async function GET() {
     const u = (email: string) => users.find(u => u.email === email)!._id;
 
     const posts = await Post.insertMany([
-        // Kothrud area posts
         {
             authorId: u('rahul@civic.com'),
             title: 'Broken streetlight near Kothrud bus stop',
@@ -91,7 +87,6 @@ export async function GET() {
             postedIn: 'area', area: 'Kothrud', state: 'Maharashtra',
             agrees: 30, disagrees: 5, views: 90, status: 'WorkStarted',
         },
-        // Bavdhan area posts
         {
             authorId: u('priya@civic.com'),
             title: 'Water supply disrupted in Bavdhan',
@@ -106,7 +101,6 @@ export async function GET() {
             postedIn: 'area', area: 'Bavdhan', state: 'Maharashtra',
             agrees: 22, disagrees: 3, views: 75, status: 'Declined',
         },
-        // Bhugaon area posts
         {
             authorId: u('amit@civic.com'),
             title: 'School road in Bhugaon flooded every rain',
@@ -121,7 +115,6 @@ export async function GET() {
             postedIn: 'area', area: 'Bhugaon', state: 'Maharashtra',
             agrees: 55, disagrees: 2, views: 180, status: 'WorkStarted',
         },
-        // State-level posts
         {
             authorId: u('rahul@civic.com'),
             title: 'Maharashtra road repair budget misused',
@@ -138,7 +131,6 @@ export async function GET() {
         },
     ]);
 
-    // Update users' post history arrays with the seeded posts
     for (const post of posts) {
         if (post.postedIn === 'area') {
             await User.updateOne({ _id: post.authorId }, { $push: { areaPostHistory: post._id } });

@@ -122,11 +122,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
     return (
         <div className="min-h-screen bg-black text-white pb-20 pt-8 flex flex-col items-center px-4">
-
-            {/* THE REELS CARD */}
             <div className="relative w-full max-w-md aspect-[9/16] bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl border border-zinc-800 flex-shrink-0">
-
-                {/* Background Media */}
                 {post.mediaType === 'video' && post.mediaUrl ? (
                     <video src={post.mediaUrl} controls autoPlay loop className="absolute inset-0 w-full h-full object-cover" />
                 ) : post.mediaType === 'image' && post.mediaUrl ? (
@@ -136,11 +132,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                         <span className="text-zinc-500 font-bold text-4xl mb-4">CIVIC</span>
                     </div>
                 )}
-
-                {/* Gradient Overlay for Text */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
-
-                {/* Bottom Info Section */}
                 <div className="absolute bottom-0 left-0 right-16 p-4 pb-6 z-10 flex flex-col justify-end pointer-events-auto">
                     <div className="flex items-center gap-2 mb-1">
                         <Link href={`/profile/${post.author?._id}`} className="font-bold text-lg hover:underline drop-shadow-md">
@@ -154,8 +146,6 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                     <h2 className="font-bold text-xl leading-tight mb-2 drop-shadow-md">{post.title}</h2>
                     <p className="text-sm text-gray-200 line-clamp-3 drop-shadow-md">{post.description}</p>
                 </div>
-
-                {/* Right Side Buttons */}
                 <div className="absolute bottom-6 right-2 w-14 flex flex-col items-center justify-end space-y-6 z-10 pointer-events-auto pb-4">
                     <div className="flex flex-col items-center">
                         <button onClick={() => handleVote('agree')} className="w-10 h-10 bg-black/40 rounded-full flex items-center justify-center backdrop-blur-sm hover:scale-110 active:scale-95 transition-transform cursor-pointer">
@@ -171,11 +161,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                     </div>
                 </div>
             </div>
-
-            {/* EVERYTHING UNDERNEATH THE CARD */}
             <div className="w-full max-w-md mt-6 space-y-6">
-
-                {/* Officer Controls */}
                 {isOfficer && (
                     <div className="bg-destructive/10 border border-destructive/30 p-4 rounded-xl">
                         <h3 className="text-destructive font-bold mb-3 flex items-center gap-2">
@@ -189,8 +175,6 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                         </div>
                     </div>
                 )}
-
-                {/* Author Controls */}
                 {(session?.user as any)?.id === post.author?._id && (
                     <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl flex justify-between items-center shadow-xl">
                         <span className="text-sm text-zinc-400 font-medium">You reported this issue</span>
@@ -202,8 +186,6 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                         </button>
                     </div>
                 )}
-
-                {/* Comments Section */}
                 <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl shadow-xl">
                     <h3 className="font-bold text-lg mb-4">Discussion ({post.comments?.length || 0})</h3>
 
@@ -224,8 +206,6 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                             ))
                         )}
                     </div>
-
-                    {/* Comment Input */}
                     <form onSubmit={handleComment} className="flex gap-2">
                         <input
                             type="text"

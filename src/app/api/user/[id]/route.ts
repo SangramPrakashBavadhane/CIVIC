@@ -26,7 +26,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
             );
         }
 
-        // Can only delete your own account
         if (user._id.toString() !== id) {
             return NextResponse.json(
                 { message: 'You can only delete your own account' },
@@ -62,7 +61,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             return NextResponse.json({ message: 'User not found' }, { status: 404 });
         }
 
-        // Fetch all posts authored by this user
         const userPosts = await Post.find({ authorId: id }).sort({ createdAt: -1 }).lean();
 
 

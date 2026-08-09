@@ -20,7 +20,6 @@ export default function LoginPage() {
     setError('');
 
     try {
-      // NextAuth handles the secure token storage automatically!
       const res = await signIn('credentials', {
         redirect: false,
         email: formData.email,
@@ -31,7 +30,7 @@ export default function LoginPage() {
         setError('Invalid email or password');
       } else {
         router.push('/feed');
-        router.refresh(); // Force navbar to update logged-in state
+        router.refresh(); 
       }
     } catch (err) {
       setError('Something went wrong');

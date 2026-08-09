@@ -13,7 +13,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         }
         await dbConnect();
 
-        // Await the params object (Required in Next.js 15+)
         const { id } = await params;
 
         const user = await User.findOne({ email: session.user.email });
@@ -30,7 +29,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             );
         }
 
-        // Create the comment matching the new Schema (authorName is required!)
         const newComment = {
             text: text.trim(),
             authorName: user.name,

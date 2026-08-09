@@ -12,17 +12,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 email: { label: 'Email', type: 'email' },
                 password: { label: 'Password', type: 'password' },
             },
-            // 1️⃣ authorize() — runs on every login attempt
             async authorize(credentials) {
                 await dbConnect();
                 const user = await User.findOne({ email: credentials?.email });
-                if (!user) return null; // user not found
+                if (!user) return null; 
                 const isValid = await bcrypt.compare(
                     credentials?.password as string,
                     user.password
                 );
-                if (!isValid) return null; // wrong password
-                // Return only what we want in the token
+                if (!isValid) return null; 
                 return {
                     id: user._id.toString(),
                     name: user.name,

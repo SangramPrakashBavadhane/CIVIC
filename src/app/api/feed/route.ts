@@ -19,6 +19,9 @@ export async function GET(req: NextRequest) {
 
         const { searchParams } = new URL(req.url);
         const tab = searchParams.get('tab') === 'state' ? 'state' : 'area';
+        const page = parseInt(searchParams.get('page') || '1');
+        const limit = 10;
+        const skip = (page - 1) * limit;
 
         const posts = await Post.aggregate([
             {
@@ -51,12 +54,17 @@ export async function GET(req: NextRequest) {
                 },
             },
             { $sort: { trendingScore: -1 } },
-            { $limit: 10 },
+            { $skip: skip },
+            { $limit: limit + 1 },
         ]);
 
-        // Watch history updating removed for MVP
+        let hasMore = false;
+        if (posts.length > limit) {
+            hasMore = true;
+            posts.pop();
+        }
 
-        return NextResponse.json({ posts }, { status: 200 });
+        return NextResponse.json({ posts, hasMore }, { status: 200 });
 
     } catch (error) {
         return NextResponse.json(

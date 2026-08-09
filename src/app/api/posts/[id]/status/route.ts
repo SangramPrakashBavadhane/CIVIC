@@ -13,18 +13,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
         await dbConnect();
 
-        // Await the params object (Required in Next.js 15+)
         const { id } = await params;
 
         const { status } = await req.json();
 
-        // Fetch post first to check its level
         const postToUpdate = await Post.findById(id);
         if (!postToUpdate) {
             return NextResponse.json({ message: 'Post not found' }, { status: 404 });
         }
 
-        // Check if the user is an authorized officer for this specific post
         const user = await User.findOne({ email: session.user.email });
         const userRole = user?.role?.toLowerCase();
         
@@ -35,7 +32,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
             return NextResponse.json({ message: 'Forbidden. You are not authorized to change the status of this post.' }, { status: 403 });
         }
 
-        // Update the post status
         postToUpdate.status = status;
         await postToUpdate.save();
 

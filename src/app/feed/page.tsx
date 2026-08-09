@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 
@@ -27,27 +27,54 @@ export default function FeedPage() {
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const observer = useRef<IntersectionObserver | null>(null);
 
     const { data: session } = useSession();
     const userRole = (session?.user as any)?.role?.toLowerCase();
 
-    useEffect(() => {
-        const fetchPosts = async () => {
-            setLoading(true);
-            try {
-                const res = await fetch(`/api/feed?tab=${activeTab}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setPosts(data.posts);
-                }
-            } catch (err) {
-                console.error('Failed to fetch posts');
-            } finally {
-                setLoading(false);
+    const fetchPosts = async (currentPage: number, currentTab: string) => {
+        if (currentPage === 1) setLoading(true);
+        else setLoadingMore(true);
+        
+        try {
+            const res = await fetch(`/api/feed?tab=${currentTab}&page=${currentPage}`);
+            if (res.ok) {
+                const data = await res.json();
+                setPosts(prev => currentPage === 1 ? data.posts : [...prev, ...data.posts]);
+                setHasMore(data.hasMore);
             }
-        };
-        fetchPosts();
+        } catch (err) {
+            console.error('Failed to fetch posts');
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
+    };
+
+    useEffect(() => {
+        setPage(1);
+        fetchPosts(1, activeTab);
     }, [activeTab]);
+
+    useEffect(() => {
+        if (page > 1) {
+            fetchPosts(page, activeTab);
+        }
+    }, [page]);
+
+    const lastPostElementRef = useCallback((node: HTMLDivElement) => {
+        if (loading || loadingMore) return;
+        if (observer.current) observer.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                setPage(prevPage => prevPage + 1);
+            }
+        }, { root: null, rootMargin: '0px', threshold: 0.5 });
+        if (node) observer.current.observe(node);
+    }, [loading, loadingMore, hasMore]);
 
     const handleVote = async (postId: string, type: 'agree' | 'disagree') => {
         try {
@@ -98,7 +125,6 @@ export default function FeedPage() {
 
     return (
         <div className="h-[calc(100vh-64px)] bg-black flex justify-center relative overflow-hidden">
-            {/* TABS OVERLAY */}
             <div className="absolute top-4 left-0 right-0 z-50 flex justify-center space-x-6 text-white font-semibold drop-shadow-md">
                 <button 
                     onClick={() => setActiveTab('area')} 
@@ -114,7 +140,6 @@ export default function FeedPage() {
                 </button>
             </div>
 
-            {/* REELS SCROLL CONTAINER */}
             <div className="w-full max-w-md h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide bg-zinc-900 relative">
                 {loading ? (
                     <div className="h-full flex items-center justify-center">
@@ -128,11 +153,14 @@ export default function FeedPage() {
                         </Link>
                     </div>
                 ) : (
-                    posts.map((post) => {
+                    posts.map((post, index) => {
                         const isAuthorizedOfficer = (userRole === 'offl1' && post.postedIn === 'area') || (userRole === 'offl2' && post.postedIn === 'state');
                         return (
-                        <div key={post._id} className="w-full h-full snap-start snap-always relative">
-                            {/* MEDIA BACKGROUND */}
+                        <div 
+                            key={post._id} 
+                            ref={index === posts.length - 1 ? lastPostElementRef : null} 
+                            className="w-full h-full snap-start snap-always relative flex-shrink-0"
+                        >
                             {post.mediaType === 'video' && post.mediaUrl ? (
                                 <video 
                                     src={post.mediaUrl} 
@@ -154,10 +182,8 @@ export default function FeedPage() {
                                 </div>
                             )}
 
-                            {/* GRADIENT OVERLAY */}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
-                            {/* BOTTOM INFO SECTION */}
                             <div className="absolute bottom-0 left-0 right-16 p-4 pb-6 text-white z-10 flex flex-col justify-end pointer-events-auto">
                                 <div className="flex items-center gap-2 mb-1">
                                     <Link href={`/profile/${post.author?._id}`} className="font-bold text-lg hover:underline drop-shadow-md">
@@ -171,7 +197,6 @@ export default function FeedPage() {
                                             {post.status} {isAuthorizedOfficer && '▼'}
                                         </button>
 
-                                        {/* Dropdown Menu */}
                                         {isAuthorizedOfficer && activeDropdown === post._id && (
                                             <div className="absolute bottom-full left-0 mb-2 w-40 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl overflow-hidden z-50">
                                                 <button onClick={() => handleStatusChange(post._id, 'NotSeen')} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-800 text-white border-b border-zinc-800">Not Seen</button>
@@ -187,10 +212,8 @@ export default function FeedPage() {
                                 <p className="text-sm text-gray-200 line-clamp-3 drop-shadow-md">{post.description}</p>
                             </div>
 
-                            {/* RIGHT SIDE ACTION BUTTONS */}
                             <div className="absolute bottom-6 right-2 w-14 flex flex-col items-center justify-end space-y-6 z-10 pointer-events-auto pb-4">
                                 
-                                {/* AGREE BUTTON */}
                                 <button onClick={() => handleVote(post._id, 'agree')} className="flex flex-col items-center group cursor-pointer active:scale-95 transition-transform">
                                     <div className="w-10 h-10 bg-black/40 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:bg-green-500/80 transition-colors">
                                         <img src="/SVGrepo/thumbs-up-svgrepo-com.svg" alt="Agree" className="w-6 h-6 drop-shadow-lg pointer-events-none invert" />
@@ -198,7 +221,6 @@ export default function FeedPage() {
                                     <span className="text-white text-xs font-bold mt-1 drop-shadow-md">{post.agrees}</span>
                                 </button>
 
-                                {/* DISAGREE BUTTON */}
                                 <button onClick={() => handleVote(post._id, 'disagree')} className="flex flex-col items-center group cursor-pointer active:scale-95 transition-transform">
                                     <div className="w-10 h-10 bg-black/40 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:bg-red-500/80 transition-colors">
                                         <img src="/SVGrepo/thumbs-down-svgrepo-com.svg" alt="Disagree" className="w-6 h-6 drop-shadow-lg pointer-events-none invert" />
@@ -206,7 +228,6 @@ export default function FeedPage() {
                                     <span className="text-white text-xs font-bold mt-1 drop-shadow-md">{post.disagrees}</span>
                                 </button>
 
-                                {/* COMMENTS LINK */}
                                 <Link href={`/post/${post._id}`} className="flex flex-col items-center group">
                                     <div className="w-10 h-10 bg-black/40 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:bg-white/30 transition-colors">
                                         <img src="/SVGrepo/message-square-svgrepo-com.svg" alt="Discuss" className="w-5 h-5 drop-shadow-lg invert" />
@@ -218,9 +239,13 @@ export default function FeedPage() {
                         </div>
                     )})
                 )}
+                {loadingMore && (
+                    <div className="w-full h-20 snap-start flex items-center justify-center flex-shrink-0 py-8">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                    </div>
+                )}
             </div>
 
-            {/* HIDE SCROLLBAR CSS GLOBALLY OR INLINE */}
             <style jsx global>{`
                 .scrollbar-hide::-webkit-scrollbar {
                     display: none;
